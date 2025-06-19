@@ -9,9 +9,11 @@ import (
 )
 
 func main() {
+	config.InitDB("root:wenga369@tcp(127.0.0.1:3306)/sys?charset=utf8mb4&parseTime=True&loc=Local")
 	rc := config.NewClient()
 	repo := repository.NewRedisRepo(rc)
-	svc := service.NewGameService(repo)
+	mRepo := repository.NewMySQLRepo(config.DB)
+	svc := service.NewGameService(repo, mRepo)
 
 	go svc.GameServer()
 

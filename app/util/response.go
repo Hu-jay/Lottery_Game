@@ -4,15 +4,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/Hu-jay/Lottery_Game/app/models"
 )
 
 func Wrap(c *gin.Context, data interface{}, err error) {
-	type ret struct {
-		Status string      `json:"status"`
-		Msg    string      `json:"msg"`
-		Data   interface{} `json:"data"`
-	}
-	r := ret{Status: "ok", Msg: "", Data: []struct{}{}}
+
+	r := models.Ret{Status: "ok", Msg: "", Data: []struct{}{}}
 	if data != nil {
 		r.Data = data
 	}

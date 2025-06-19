@@ -36,4 +36,8 @@ func RegisterRoutes(r *gin.Engine, svc *service.GameService) {
 		}
 		util.Wrap(c, bs, nil)
 	})
+	r.GET("/history/:user", func(c *gin.Context) {
+		recs, err := svc.GetHistory(c.Param("user"))
+		util.Wrap(c, recs, err)
+	})
 }
