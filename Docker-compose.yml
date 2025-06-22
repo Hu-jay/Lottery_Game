@@ -1,0 +1,41 @@
+version: '3.7'
+services:
+  app:
+    build: .
+    container_name: lottery_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - MYSQL_DSN=root:pass@tcp(db:3306)/game_db?charset=utf8mb4&parseTime=True&loc=Local
+      - REDIS_ADDR=redis:6379
+    networks:
+      - backend
+
+  db:
+    image: mysql:8.0
+    container_name: lottery_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+      MYSQL_DATABASE: game_db
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend
+
+  redis:
+    image: redis:alpine
+    container_name: lottery_redis
+    restart: unless-stopped
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  db_data:

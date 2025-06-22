@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	RoundSecond    = 30
+	RoundSecond    = 60
 	DefaultBalance = 2000
 	UserMember     = "game"
 	BetThisRound   = "bet_this_round"
@@ -36,12 +36,13 @@ func (s *GameService) GameServer() {
 		s.Round++
 		log.Println("round start", s.Round)
 		<-ticker.C
-		bets := s.GetBets()
-		prize := s.GetPrize()
+		bets := s.GetBets()   //從 Redis 撈下注清單
+		prize := s.GetPrize() //計算累積獎金池
 		if len(bets) == 0 {
 			log.Println("沒有玩家下注")
 			continue
 		}
+		//隨機抽選贏家
 		win := rand.Intn(prize + 1)
 		var w string
 		for _, b := range bets {
@@ -52,12 +53,13 @@ func (s *GameService) GameServer() {
 			}
 		}
 		log.Println("獲得金額", prize, "贏家是", w)
-		s.redis.ZIncrBy(UserMember, float64(prize), w)
-		s.mysql.SaveBets(bets)
-		s.redis.Del(BetThisRound)
+		s.redis.ZIncrBy(UserMember, float64(prize), w) //增加贏家餘額
+		s.mysql.SaveBets(bets)                         //保存下注歷史至 MySQL
+		s.redis.Del(BetThisRound)                      //清空 Redis 當輪下注資料
 	}
 }
 
+// 取得獎金池
 func (s *GameService) GetPrize() int {
 	bets, _ := s.redis.ZRangeWithScores(BetThisRound)
 	sum := 0
@@ -67,6 +69,7 @@ func (s *GameService) GetPrize() int {
 	return sum
 }
 
+// 取得本輪下注記錄
 func (s *GameService) GetBets() []models.UserBet {
 	bets, _ := s.redis.ZRangeWithScores(BetThisRound)
 	var ret []models.UserBet
@@ -76,6 +79,7 @@ func (s *GameService) GetBets() []models.UserBet {
 	return ret
 }
 
+// 查玩家餘額／初始化玩家
 func (s *GameService) GetBalance(uid string) (models.User, error) {
 	score, err := s.redis.ZScore(UserMember, uid)
 	if err != nil {
@@ -88,6 +92,7 @@ func (s *GameService) GetBalance(uid string) (models.User, error) {
 	return models.User{Id: uid, Balance: int(score)}, nil
 }
 
+// 處理下注邏輯，改 Redis 狀態
 func (s *GameService) Bet(uid string, amt int) (models.User, error) {
 	u, err := s.GetBalance(uid)
 	if err != nil {
@@ -105,6 +110,7 @@ func (s *GameService) Bet(uid string, amt int) (models.User, error) {
 	return u, nil
 }
 
+// 查 MySQL 歷史下注紀錄
 func (s *GameService) GetHistory(user string) ([]models.BetRecord, error) {
 	return s.mysql.GetHistory(user), nil
 }
