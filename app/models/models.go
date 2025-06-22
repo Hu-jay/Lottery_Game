@@ -13,6 +13,12 @@ type UserBet struct {
 	Amount int    `json:"amount"`
 }
 
+type Ret struct {
+	Status string      `json:"status"`
+	Msg    string      `json:"msg"`
+	Data   interface{} `json:"data"`
+}
+
 type BetRecord struct {
 	ID        uint      `gorm:"primaryKey"`
 	UserID    string    `gorm:"column:user_id;index"`
@@ -21,8 +27,8 @@ type BetRecord struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 
-type Ret struct {
-	Status string      `json:"status"`
-	Msg    string      `json:"msg"`
-	Data   interface{} `json:"data"`
+type UserDB struct {
+	ID        string    `gorm:"column:id;primaryKey"`
+	Balance   int       `gorm:"column:balance"`
+	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
 }
